@@ -73,8 +73,7 @@ internal class UserInterface(LibraryService libraryService)
 
     private int GetUserChoice()
     {
-        Console.Write("Enter your choice: ");
-        string? input = Console.ReadLine()?.Trim();
+        string? input = ConsoleHelper.GetInput("Enter your choice: ");
         if (int.TryParse(input, out int choice) && Enum.IsDefined(typeof(MenuOptions), choice))
             return choice;
         else
@@ -84,18 +83,14 @@ internal class UserInterface(LibraryService libraryService)
         }
     }
 
-    private void AddBook()
+    internal void AddBook()
     {
         ConsoleHelper.ClearConsole();
-        ConsoleHelper.WriteActionTitle("|__ Add New Book __|", "Enter the book information:");
-        Console.Write(" - Title: ");
-        string? title = Console.ReadLine()?.Trim();
-        Console.Write(" - Author: ");
-        string? author = Console.ReadLine()?.Trim();
-        Console.Write(" - ISBN: ");
-        string? isbn = Console.ReadLine()?.Trim();
-        Console.Write(" - Category: ");
-        string? category = Console.ReadLine()?.Trim();
+        ConsoleHelper.PrintActionTitle("|__ Add New Book __|", "Enter the book information:");
+        string? title = ConsoleHelper.GetInput(" - Title: ");
+        string? author = ConsoleHelper.GetInput(" - Author: ");
+        string? isbn = ConsoleHelper.GetInput(" - ISBN: ");
+        string? category = ConsoleHelper.GetInput(" - Category: ");
 
         var book = new Book(title, author, isbn, category);
         if (book.IsValid())
@@ -112,15 +107,15 @@ internal class UserInterface(LibraryService libraryService)
         }
         else
             ConsoleHelper.PrintWarning("All fields are required. Please try again.");
+
         ConsoleHelper.HandleReturn();
     }
 
     private void RemoveBook()
     {
         ConsoleHelper.ClearConsole();
-        ConsoleHelper.WriteActionTitle("|__ Remove a Book __|", "Enter the ISBN of the book to remove:");
-        Console.Write(" - ISBN: ");
-        string? isbn = Console.ReadLine()?.Trim();
+        ConsoleHelper.PrintActionTitle("|__ Remove a Book __|", "Enter the ISBN of the book to remove:");
+        string? isbn = ConsoleHelper.GetInput(" - ISBN: ");
         try
         {
             _libraryService.RemoveBook(isbn);
@@ -136,7 +131,7 @@ internal class UserInterface(LibraryService libraryService)
     private void ListAllBooks()
     {
         ConsoleHelper.ClearConsole();
-        ConsoleHelper.WriteActionTitle("|__ List All Books __|", "Here are all the books in the library:");
+        ConsoleHelper.PrintActionTitle("|__ List All Books __|", "Here are all the books in the library:");
         var books = _libraryService.GetAllBooks();
         if (books.Any())
         {
@@ -151,11 +146,10 @@ internal class UserInterface(LibraryService libraryService)
     private void SearchBooks()
     {
         ConsoleHelper.ClearConsole();
-        ConsoleHelper.WriteActionTitle("|__ Search Books __|", "Enter the search term (title, author, or ISBN):");
-        Console.Write(" - Search Term: ");
-        string? searchTerm = Console.ReadLine()?.Trim();
+        ConsoleHelper.PrintActionTitle("|__ Search Books __|", "Enter the search term (title, author, or ISBN):");
+        string? searchTerm = ConsoleHelper.GetInput(" - Search Term: ");
         var books = _libraryService.SearchBooks(searchTerm);
-        ConsoleHelper.WriteActionTitle("=== Search Results ===", $"Found {books.Count()} book(s):");
+        ConsoleHelper.PrintActionTitle("=== Search Results ===", $"Found {books.Count()} book(s):");
         if (books.Any())
         {
             foreach (var book in books)
@@ -169,11 +163,9 @@ internal class UserInterface(LibraryService libraryService)
     private void ChangeBookStatus()
     {
         ConsoleHelper.ClearConsole();
-        ConsoleHelper.WriteActionTitle("|__ Change Book Status __|", "Enter the ISBN of the book to change its status:");
-        Console.Write(" - ISBN: ");
-        string? isbn = Console.ReadLine()?.Trim();
-        Console.Write(" - Status (if borrowed type '0' | if available type '1' ) : ");
-        string? statusInput = Console.ReadLine()?.Trim();
+        ConsoleHelper.PrintActionTitle("|__ Change Book Status __|", "Enter the ISBN of the book to change its status:");
+        string? isbn = ConsoleHelper.GetInput(" - ISBN: ");
+        string? statusInput = ConsoleHelper.GetInput(" - Status (if borrowed type '0' | if available type '1' ): ");
         if (int.TryParse(statusInput, out int status) && (status == 0 || status == 1))
         {
             try

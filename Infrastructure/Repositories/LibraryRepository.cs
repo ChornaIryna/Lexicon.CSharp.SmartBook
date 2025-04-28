@@ -21,7 +21,7 @@ public class LibraryRepository : ILibraryRepository
         SaveChanges();
     }
 
-    public IEnumerable<Book> GetAllBooks() => _books;
+    public IEnumerable<Book> GetAllBooks() => _books.OrderBy(b => b.Title);
     public Book? GetBookByISBN(string isbn) => _books.FirstOrDefault(b => b.ISBN.Equals(isbn, StringComparison.OrdinalIgnoreCase));
 
     public void RemoveBook(string isbn)

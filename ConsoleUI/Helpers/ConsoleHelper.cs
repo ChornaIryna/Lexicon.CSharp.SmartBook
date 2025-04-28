@@ -16,7 +16,7 @@ public class ConsoleHelper
         """);
     }
 
-    internal static void WriteActionTitle(string actionTitle, string additionalText)
+    public static void PrintActionTitle(string actionTitle, string additionalText)
     {
         Console.WriteLine($"""
             {actionTitle}
@@ -50,5 +50,11 @@ public class ConsoleHelper
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine(warningText);
         Console.ResetColor();
+    }
+
+    public static string GetInput(string prompt)
+    {
+        Console.Write(prompt);
+        return Console.ReadLine()?.Trim() ?? string.Empty;
     }
 }

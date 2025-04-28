@@ -14,7 +14,7 @@ public class LibraryService
     public void AddBook(Book book)
     {
         if (_libraryRepository.GetBookByISBN(book.ISBN) != null)
-            throw new DuplicateSIBNException(book.ISBN);
+            throw new DuplicateISBNException(book.ISBN);
 
         _libraryRepository.AddBook(book);
     }
