@@ -19,13 +19,13 @@ public class BookTests
     public void IsValid_ShouldReturnTrue_WhenAllPropertiesAreValid()
     {
         var book = new Book("Test Title", "Test Author", "12345", "Test Category");
-        Assert.True(book.IsValid());
+        Assert.True(book.IsValid().valid);
     }
 
     [Fact]
     public void IsValid_ShouldReturnFalse_WhenTitleIsEmpty()
     {
         var book = new Book("", "Test Author", "12345", "Test Category");
-        Assert.False(book.IsValid());
+        Assert.False(book.IsValid().valid);
     }
 }

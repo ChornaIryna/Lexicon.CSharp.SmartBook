@@ -9,7 +9,7 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        string jsonFilePath = Path.Combine(AppContext.BaseDirectory, "library.json");
+        string jsonFilePath = Path.Combine(AppContext.BaseDirectory);
         ILibraryRepository repository = new LibraryRepository(jsonFilePath);
         LibraryService libraryService = new(repository);
         UserInterface ui = new(libraryService);

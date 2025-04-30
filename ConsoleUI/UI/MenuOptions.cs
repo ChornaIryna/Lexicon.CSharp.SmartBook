@@ -6,5 +6,9 @@ internal enum MenuOptions
     RemoveBook,
     ListAllBooks,
     SearchBooks,
-    ChangeBookStatus
+    ChangeBookStatus,
+    AddUser,
+    ListAllUsers,
+    ListBorrowedBooksByUser,
+    ListAllBorrowedBooks
 }
