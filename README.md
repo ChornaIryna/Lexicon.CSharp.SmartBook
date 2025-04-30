@@ -26,6 +26,11 @@ A simple console-based library system built with C#. It demonstrates Clean Archi
 
 4. Follow the menu options in the console to interact with the library system.
 
+The application allows you to:
+- Add new books and users.
+- Borrow and return books.
+- View books and user information.
+- Export report to a `report.txt` and save it in the application's working directory. This feature is available when listing borrowed books. After displaying the list of borrowed books, the system prompts the user to confirm whether they want to export the data.
 
 ---
 

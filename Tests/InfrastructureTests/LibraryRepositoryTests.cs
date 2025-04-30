@@ -15,6 +15,7 @@ public class LibraryRepositoryTests
         if (File.Exists(Path.Combine(testFilePath, "users.json")))
             File.Delete(Path.Combine(testFilePath, "users.json"));
     }
+
     [Fact]
     public void AddBook_ShouldPersistBook()
     {

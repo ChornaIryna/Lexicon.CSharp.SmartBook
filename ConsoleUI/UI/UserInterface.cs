@@ -1,7 +1,6 @@
 ﻿using SmartBook.ConsoleUI.Helpers;
 using SmartBook.Core.Entities;
 using SmartBook.Core.Services;
-using System.Text;
 
 namespace SmartBook.ConsoleUI.UI;
 
@@ -80,7 +79,7 @@ internal class UserInterface(LibraryService libraryService)
     {
         while (true)
         {
-            string? input = ConsoleHelper.GetInput("Enter your choice: ");
+            string input = ConsoleHelper.GetValidatedInput("Enter your choice: ");
             if (int.TryParse(input, out int choice) && _menuActions.ContainsKey(choice))
                 return choice;
             ConsoleHelper.PrintWarning($"Invalid choice. Please try again. Your input should be a number between 0 and {_menuActions.Count - 1} ", false);
@@ -93,10 +92,10 @@ internal class UserInterface(LibraryService libraryService)
     {
         ConsoleHelper.ClearConsole();
         ConsoleHelper.PrintActionTitle("|__ Add New Book __|", "Enter the book information:");
-        string title = GetValidatedInput(" - Title: ");
-        string author = GetValidatedInput(" - Author: ");
-        string isbn = GetValidatedInput(" - ISBN: ");
-        string category = GetValidatedInput(" - Category: ");
+        string title = ConsoleHelper.GetValidatedInput(" - Title: ");
+        string author = ConsoleHelper.GetValidatedInput(" - Author: ");
+        string isbn = ConsoleHelper.GetValidatedInput(" - ISBN: ");
+        string category = ConsoleHelper.GetValidatedInput(" - Category: ");
 
         var book = new Book(title, author, isbn, category);
         var (valid, message) = book.IsValid();
@@ -117,7 +116,7 @@ internal class UserInterface(LibraryService libraryService)
     {
         ConsoleHelper.ClearConsole();
         ConsoleHelper.PrintActionTitle("|__ Remove Book __|", "Enter the ISBN of the book to remove:");
-        string? isbn = GetValidatedInput(" - ISBN: ");
+        string? isbn = ConsoleHelper.GetValidatedInput(" - ISBN: ");
         try
         {
             _libraryService.RemoveBook(isbn);
@@ -136,19 +135,19 @@ internal class UserInterface(LibraryService libraryService)
         var subtitle = books.Any() ? $"Found {books.Count()} book(s):" : "No books found.";
         ConsoleHelper.PrintActionTitle("|__ List All Books __|", subtitle);
         if (books.Any())
-            PrintInfoList(books);
+            ConsoleHelper.PrintInfoList(books);
     }
 
     private void SearchBooks()
     {
         ConsoleHelper.ClearConsole();
         ConsoleHelper.PrintActionTitle("|__ Search Books __|", "Enter the search term (title, author, or ISBN):");
-        string searchTerm = GetValidatedInput(" - Search Term: ");
+        string searchTerm = ConsoleHelper.GetValidatedInput(" - Search Term: ");
         var books = _libraryService.SearchBooks(searchTerm);
         if (books.Any())
         {
             ConsoleHelper.PrintActionTitle("=== Search Results ===", $"Found {books.Count()} book(s):");
-            PrintInfoList(books);
+            ConsoleHelper.PrintInfoList(books);
         }
         else
             ConsoleHelper.PrintWarning("No books was found.");
@@ -158,8 +157,8 @@ internal class UserInterface(LibraryService libraryService)
     {
         ConsoleHelper.ClearConsole();
         ConsoleHelper.PrintActionTitle("|__ Borrow Or Return A Book __|", "Enter the book's ISBN and the user ID (GUID):");
-        string isbn = GetValidatedInput(" - ISBN: ");
-        string userIdInput = GetValidatedInput(" - User ID (GUID): ");
+        string isbn = ConsoleHelper.GetValidatedInput(" - ISBN: ");
+        string userIdInput = ConsoleHelper.GetValidatedInput(" - User ID (GUID): ");
         if (Guid.TryParse(userIdInput, out Guid userId))
         {
             try
@@ -186,16 +185,81 @@ internal class UserInterface(LibraryService libraryService)
 
         if (usersWithBooks.Any())
         {
-            PrintInfoList(usersWithBooks, false);
+            ConsoleHelper.PrintInfoList(usersWithBooks, false);
             ExportToFile(usersWithBooks);
         }
+    }
+
+    #endregion Book Management
+
+    #region User Management
+    private void AddUser()
+    {
+        ConsoleHelper.ClearConsole();
+        ConsoleHelper.PrintActionTitle("|__ Add New User __|", "Enter the user information:");
+        string name = ConsoleHelper.GetValidatedInput(" - Name: ");
+        var user = new User(name);
+        try
+        {
+            _libraryService.AddUser(user);
+            ConsoleHelper.PrintSuccess($"User '{name}' added successfully.");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.PrintError(ex.Message);
+        }
+    }
+
+    private void ListAllUsers()
+    {
+        ConsoleHelper.ClearConsole();
+        var users = _libraryService.GetAllUsers();
+        var subtitle = users.Any() ? $"Found {users.Count()} user(s):" : "No users found.";
+        ConsoleHelper.PrintActionTitle("|__ List All Users __|", subtitle);
+        if (users.Any())
+            ConsoleHelper.PrintInfoList(users);
+    }
+
+    private void ListBorrowedBooksByUser()
+    {
+        ConsoleHelper.ClearConsole();
+        string? userIdInput = ConsoleHelper.GetValidatedInput("Enter User ID (GUID): ");
+        if (!Guid.TryParse(userIdInput, out Guid userId))
+        {
+            ConsoleHelper.PrintWarning("Invalid User ID. Please enter a valid GUID.");
+            return;
+        }
+        try
+        {
+            var user = _libraryService.GetUserById(userId);
+            IEnumerable<Book> booksBorrowedByUser = _libraryService.GetBooksByUserId(user.Id);
+            var subtitle = booksBorrowedByUser.Any() ? $"Found {booksBorrowedByUser.Count()} book(s) borrowed by {user.Name}:" : $"No books found for user {user.Name}.";
+            ConsoleHelper.ClearConsole();
+            ConsoleHelper.PrintActionTitle($"|__ List Books Borrowed By A User __|", subtitle);
+            if (booksBorrowedByUser.Any())
+                ConsoleHelper.PrintInfoList(booksBorrowedByUser);
+
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.PrintError(ex.Message);
+        }
+    }
+    #endregion User Management
+
+
+    private void ExitApplication()
+    {
+        ConsoleHelper.ClearConsole();
+        ConsoleHelper.PrintActionTitle("|__ Exiting the application...__|", "Goodbye!");
+        _isRunning = false;
     }
 
     private static void ExportToFile(IEnumerable<object>? items)
     {
         if (items == null || !items.Any())
             return;
-        var exportChoice = GetValidatedInput("Do you want to export the items to a file? (y/n): ");
+        var exportChoice = ConsoleHelper.GetValidatedInput("Do you want to export the items to a file? (y/n): ");
         if (exportChoice?.ToLower() != "y")
         {
             ConsoleHelper.PrintWarning("Export cancelled.");
@@ -216,97 +280,6 @@ internal class UserInterface(LibraryService libraryService)
         catch (Exception ex)
         {
             ConsoleHelper.PrintError($"Failed to export items: {ex.Message}");
-        }
-    }
-
-    #endregion Book Management
-
-    #region User Management
-    private void AddUser()
-    {
-        ConsoleHelper.ClearConsole();
-        ConsoleHelper.PrintActionTitle("|__ Add New User __|", "Enter the user information:");
-        string name = GetValidatedInput(" - Name: ");
-        var user = new User(name);
-        try
-        {
-            _libraryService.AddUser(user);
-            ConsoleHelper.PrintSuccess($"User '{name}' added successfully.");
-        }
-        catch (Exception ex)
-        {
-            ConsoleHelper.PrintError(ex.Message);
-        }
-    }
-
-    private void ListAllUsers()
-    {
-        ConsoleHelper.ClearConsole();
-        var users = _libraryService.GetAllUsers();
-        var subtitle = users.Any() ? $"Found {users.Count()} user(s):" : "No users found.";
-        ConsoleHelper.PrintActionTitle("|__ List All Users __|", subtitle);
-        if (users.Any())
-            PrintInfoList(users);
-    }
-
-    private void ListBorrowedBooksByUser()
-    {
-        ConsoleHelper.ClearConsole();
-        string? userIdInput = GetValidatedInput("Enter User ID (GUID): ");
-        if (!Guid.TryParse(userIdInput, out Guid userId))
-        {
-            ConsoleHelper.PrintWarning("Invalid User ID. Please enter a valid GUID.");
-            return;
-        }
-        try
-        {
-            var user = _libraryService.GetUserById(userId);
-            IEnumerable<Book> booksBorrowedByUser = _libraryService.GetBooksByUserId(user.Id);
-            var subtitle = booksBorrowedByUser.Any() ? $"Found {booksBorrowedByUser.Count()} book(s) borrowed by {user.Name}:" : $"No books found for user {user.Name}.";
-            ConsoleHelper.ClearConsole();
-            ConsoleHelper.PrintActionTitle($"|__ List Books Borrowed By A User __|", subtitle);
-            if (booksBorrowedByUser.Any())
-                PrintInfoList(booksBorrowedByUser);
-
-        }
-        catch (Exception ex)
-        {
-            ConsoleHelper.PrintError(ex.Message);
-        }
-    }
-    #endregion User Management
-
-
-    private void ExitApplication()
-    {
-        ConsoleHelper.ClearConsole();
-        ConsoleHelper.PrintActionTitle("|__ Exiting the application...__|", "Goodbye!");
-        _isRunning = false;
-    }
-
-    private static void PrintInfoList(IEnumerable<object>? items, bool showReturnPrompt = true)
-    {
-        if (items == null || !items.Any())
-        {
-            ConsoleHelper.PrintWarning("No items to display.");
-            return;
-        }
-
-        StringBuilder stringBuilder = new();
-        foreach (var item in items)
-            stringBuilder.AppendLine(item?.ToString() ?? "Unknown item");
-
-        ConsoleHelper.PrintInfo(stringBuilder.ToString(), showReturnPrompt);
-    }
-
-    private static string GetValidatedInput(string prompt)
-    {
-        while (true)
-        {
-            string? input = ConsoleHelper.GetInput(prompt);
-            if (!string.IsNullOrWhiteSpace(input))
-                return input;
-            ConsoleHelper.PrintWarning("Input cannot be empty. Please try again.", false);
         }
     }
 }
