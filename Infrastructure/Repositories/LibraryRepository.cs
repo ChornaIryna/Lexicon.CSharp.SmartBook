@@ -41,9 +41,19 @@ public class LibraryRepository : ILibraryRepository
         SaveUserChanges();
     }
 
-    public IEnumerable<Book> GetAllBooks() => _books.OrderBy(b => b.Title);
+    public IEnumerable<Book> GetAllBooks()
+    {
+        _ = _books ?? throw new InvalidOperationException("Books collection is null. Ensure the repository is initialized correctly.");
+        _ = _books.Count > 0 ? _books : throw new EmptyCollectionException("Library does not have any books.");
+        return _books.OrderBy(b => b.Title);
+    }
 
-    public IEnumerable<User> GetAllUsers() => _users.OrderBy(u => u.Name);
+    public IEnumerable<User> GetAllUsers()
+    {
+        _ = _users ?? throw new InvalidOperationException("Users collection is null. Ensure the repository is initialized correctly.");
+        _ = _users.Count > 0 ? _users : throw new EmptyCollectionException("Library does not have any users.");
+        return _users.OrderBy(u => u.Name);
+    }
 
     public IEnumerable<UserWithBooksDto> GetAllUsersWithBooks()
     {
@@ -51,7 +61,7 @@ public class LibraryRepository : ILibraryRepository
             throw new InvalidOperationException("Users or books collection is null. Ensure the repository is initialized correctly.");
 
         Dictionary<Guid, List<Book>> booksByUser = GetBooksGroupedByUser();
-        var usersWithBooks = _users
+        var usersWithBooks = GetAllUsers()
             .Where(u => booksByUser.ContainsKey(u.Id))
             .Select(u => new UserWithBooksDto
             {
@@ -67,17 +77,15 @@ public class LibraryRepository : ILibraryRepository
 
     public IEnumerable<Book> GetBooksByUserId(Guid userId)
     {
-        _ = _users.FirstOrDefault(u => u.Id == userId) ?? throw new UserNotFoundException(userId.ToString());
-        return _books
-            .Where(b => b.BorrowedBy == userId)
-            .OrderBy(b => b.Title);
+        _ = GetAllUsers().FirstOrDefault(u => u.Id == userId) ?? throw new UserNotFoundException(userId.ToString());
+        return GetAllBooks().Where(b => b.BorrowedBy == userId);
     }
 
-    public User GetUserById(Guid id) => _users.FirstOrDefault(u => u.Id == id) ?? throw new UserNotFoundException(id.ToString());
+    public User? GetUserById(Guid id) => _users.FirstOrDefault(u => u.Id == id);
 
     public void RemoveBook(string isbn)
     {
-        var book = GetBookByISBN(isbn) ?? throw new BookNotFoundException(isbn);
+        var book = GetAllBooks().FirstOrDefault(book => book.ISBN.Equals(isbn, StringComparison.OrdinalIgnoreCase)) ?? throw new BookNotFoundException(isbn);
         if (book.IsBorrowed)
             throw new BookIsBorrowedException(book);
 
@@ -86,15 +94,15 @@ public class LibraryRepository : ILibraryRepository
 
     }
 
-    public IEnumerable<Book> SearchBooks(string searchTerm) => _books
+    public IEnumerable<Book> SearchBooks(string searchTerm) => GetAllBooks()
         .Where(b => b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                     b.Author.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                     b.ISBN.Equals(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     public void UpdateBookStatus(string isbn, Guid userId)
     {
-        var user = _users.FirstOrDefault(u => u.Id == userId) ?? throw new UserNotFoundException(userId.ToString());
-        var bookToUpdate = GetBookByISBN(isbn) ?? throw new BookNotFoundException(isbn);
+        var user = GetAllUsers().FirstOrDefault(u => u.Id == userId) ?? throw new UserNotFoundException(userId.ToString());
+        var bookToUpdate = GetAllBooks().FirstOrDefault(book => book.ISBN.Equals(isbn, StringComparison.OrdinalIgnoreCase)) ?? throw new BookNotFoundException(isbn);
         if (bookToUpdate.IsBorrowed && !user.Id.Equals(bookToUpdate.BorrowedBy))
             throw new BookIsBorrowedException(bookToUpdate);
         bookToUpdate.IsBorrowed = !bookToUpdate.IsBorrowed;
@@ -105,7 +113,7 @@ public class LibraryRepository : ILibraryRepository
 
     private Dictionary<Guid, List<Book>> GetBooksGroupedByUser()
     {
-        return _books
+        return GetAllBooks()
             .Where(b => b.BorrowedBy.HasValue)
             .GroupBy(b => b.BorrowedBy.Value)
             .ToDictionary(g => g.Key, g => g.ToList());

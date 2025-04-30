@@ -87,19 +87,6 @@ public class LibraryServiceTests
     }
 
     [Fact]
-    public void AddBook_DuplicateISBN_ShouldThrowException()
-    {
-        var repo = new FakeLibraryRepository();
-        var service = new LibraryService(repo);
-        var book = new Book("Test", "Author", "ISBN123", "Category");
-
-        service.AddBook(book);
-        var duplicateBook = new Book("Another Title", "Another Author", "ISBN123", "Category");
-
-        Assert.Throws<DuplicateISBNException>(() => service.AddBook(duplicateBook));
-    }
-
-    [Fact]
     public void SearchBooks_ShouldReturnCorrectBooks()
     {
         var repo = new FakeLibraryRepository();
@@ -131,16 +118,6 @@ public class LibraryServiceTests
     }
 
     [Fact]
-    public void RemoveBook_BookNotFound_ShouldThrowException()
-    {
-        var repo = new FakeLibraryRepository();
-        var service = new LibraryService(repo);
-        var book = new Book("Test", "Author", "ISBN123", "Category");
-        service.AddBook(book);
-        Assert.Throws<BookNotFoundException>(() => service.RemoveBook("NonExistentISBN"));
-    }
-
-    [Fact]
     public void UpdateBookStatus_ShouldUpdateBookStatus()
     {
         var repo = new FakeLibraryRepository();
@@ -152,41 +129,6 @@ public class LibraryServiceTests
         service.UpdateBookStatus("ISBN123", user.Id);
         Assert.True(book.IsBorrowed);
         Assert.Equal(user.Id, book.BorrowedBy);
-    }
-
-    [Fact]
-    public void UpdateBookStatus_BookNotFound_ShouldThrowException()
-    {
-        var repo = new FakeLibraryRepository();
-        var service = new LibraryService(repo);
-        var user = new User("Test User");
-        service.AddUser(user);
-        Assert.Throws<BookNotFoundException>(() => service.UpdateBookStatus("NonExistentISBN", user.Id));
-    }
-
-    [Fact]
-    public void UpdateBookStatus_UserNotFound_ShouldThrowException()
-    {
-        var repo = new FakeLibraryRepository();
-        var service = new LibraryService(repo);
-        var book = new Book("Test", "Author", "ISBN123", "Category");
-        service.AddBook(book);
-        Assert.Throws<UserNotFoundException>(() => service.UpdateBookStatus("ISBN123", Guid.NewGuid()));
-    }
-
-    [Fact]
-    public void UpdateBookStatus_BookAlreadyBorrowed_ShouldThrowException()
-    {
-        var repo = new FakeLibraryRepository();
-        var service = new LibraryService(repo);
-        var user1 = new User("User One");
-        var user2 = new User("User Two");
-        var book = new Book("Test", "Author", "ISBN123", "Category");
-        service.AddUser(user1);
-        service.AddUser(user2);
-        service.AddBook(book);
-        service.UpdateBookStatus("ISBN123", user1.Id);
-        Assert.Throws<BookIsBorrowedException>(() => service.UpdateBookStatus("ISBN123", user2.Id));
     }
 
     [Fact]

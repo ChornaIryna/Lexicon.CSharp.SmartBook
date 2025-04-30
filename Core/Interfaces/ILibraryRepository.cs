@@ -12,7 +12,7 @@ public interface ILibraryRepository
     IEnumerable<Book> GetAllBooks();
     void AddUser(User user);
     IEnumerable<User> GetAllUsers();
-    User GetUserById(Guid id);
+    User? GetUserById(Guid id);
     IEnumerable<UserWithBooksDto> GetAllUsersWithBooks();
     IEnumerable<Book> GetBooksByUserId(Guid userId);
 }

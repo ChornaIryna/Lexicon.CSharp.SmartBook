@@ -56,19 +56,29 @@ public class LibraryRepositoryTests
     public void RemoveBook_ShouldDeleteBookFromRepository()
     {
         var repo = new LibraryRepository(testFilePath);
-        var book = new Book("Test", "Author", "ISBN123", "Category");
+        var book1 = new Book("Test1", "Author1", "ISBN123", "Category");
+        var book2 = new Book("Test2", "Author2", "ISBN234", "Category");
 
-        repo.AddBook(book);
+        repo.AddBook(book1);
+        repo.AddBook(book2);
         repo.RemoveBook("ISBN123");
 
-        Assert.Empty(repo.GetAllBooks());
+        Assert.DoesNotContain(repo.GetAllBooks().ToList(), b => b.ISBN == "ISBN123");
     }
 
     [Fact]
     public void RemoveBook_ShouldThrowException_WhenBookNotFound()
     {
         var repo = new LibraryRepository(testFilePath);
-        Assert.Throws<BookNotFoundException>(() => repo.RemoveBook("ISBN123"));
+        repo.AddBook(new Book("Test", "Author", "ISBN123", "Category"));
+        Assert.Throws<BookNotFoundException>(() => repo.RemoveBook("ISBN1"));
+    }
+
+    [Fact]
+    public void RemoveBook_ShouldThrowException_WhenBooksCollectionIsEmpty()
+    {
+        var repo = new LibraryRepository(testFilePath);
+        Assert.Throws<EmptyCollectionException>(() => repo.RemoveBook("ISBN1"));
     }
 
     [Fact]
@@ -104,8 +114,10 @@ public class LibraryRepositoryTests
     {
         var repo = new LibraryRepository(testFilePath);
         var user = new User("User One");
+        var book = new Book("Test", "Author", "ISBN123", "Category");
         repo.AddUser(user);
-        Assert.Throws<BookNotFoundException>(() => repo.UpdateBookStatus("ISBN123", user.Id));
+        repo.AddBook(book);
+        Assert.Throws<BookNotFoundException>(() => repo.UpdateBookStatus("ISBN1", user.Id));
     }
 
     [Fact]
@@ -113,7 +125,9 @@ public class LibraryRepositoryTests
     {
         var repo = new LibraryRepository(testFilePath);
         var book = new Book("Test", "Author", "ISBN123", "Category");
+        var user = new User("User One");
         repo.AddBook(book);
+        repo.AddUser(user);
         Assert.Throws<UserNotFoundException>(() => repo.UpdateBookStatus("ISBN123", Guid.NewGuid()));
     }
 

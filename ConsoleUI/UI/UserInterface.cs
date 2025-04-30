@@ -132,8 +132,7 @@ internal class UserInterface(LibraryService libraryService)
     {
         ConsoleHelper.ClearConsole();
         var books = _libraryService.GetAllBooks();
-        var subtitle = books.Any() ? $"Found {books.Count()} book(s):" : "No books found.";
-        ConsoleHelper.PrintActionTitle("|__ List All Books __|", subtitle);
+        ConsoleHelper.PrintActionTitle("|__ List All Books __|", $"Found {books.Count()} book(s):");
         if (books.Any())
             ConsoleHelper.PrintInfoList(books);
     }
@@ -179,11 +178,14 @@ internal class UserInterface(LibraryService libraryService)
     private void ListAllBorrowedBooks()
     {
         ConsoleHelper.ClearConsole();
+
         var usersWithBooks = _libraryService.GetAllUsersWithBorrowedBooks();
-        var subtitle = usersWithBooks.Any() ? $"Found {usersWithBooks.Count()} user(s) with borrowed books:" : "No borrowed books found.";
+        var subtitle = usersWithBooks.Any() ? $"Found {usersWithBooks.Count()} user(s) with borrowed books:" : string.Empty;
         ConsoleHelper.PrintActionTitle("|__ List All Borrowed Books __|", subtitle);
 
-        if (usersWithBooks.Any())
+        if (!usersWithBooks.Any())
+            ConsoleHelper.PrintWarning("No books with status 'borrowed' was found.");
+        else
         {
             ConsoleHelper.PrintInfoList(usersWithBooks, false);
             ExportToFile(usersWithBooks);
@@ -233,12 +235,13 @@ internal class UserInterface(LibraryService libraryService)
         {
             var user = _libraryService.GetUserById(userId);
             IEnumerable<Book> booksBorrowedByUser = _libraryService.GetBooksByUserId(user.Id);
-            var subtitle = booksBorrowedByUser.Any() ? $"Found {booksBorrowedByUser.Count()} book(s) borrowed by {user.Name}:" : $"No books found for user {user.Name}.";
+            var subtitle = booksBorrowedByUser.Any() ? $"Found {booksBorrowedByUser.Count()} book(s) borrowed by {user.Name}:" : string.Empty;
             ConsoleHelper.ClearConsole();
             ConsoleHelper.PrintActionTitle($"|__ List Books Borrowed By A User __|", subtitle);
             if (booksBorrowedByUser.Any())
                 ConsoleHelper.PrintInfoList(booksBorrowedByUser);
-
+            else
+                ConsoleHelper.PrintWarning($"No books found for user {user.Name}.");
         }
         catch (Exception ex)
         {
